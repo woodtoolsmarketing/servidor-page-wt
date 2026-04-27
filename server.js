@@ -13,12 +13,17 @@ app.use(express.urlencoded({ extended: true }));
 app.post('/enviar-correo', async (req, res) => {
     const { nombre, email, telefono, empresa, mensaje } = req.body;
 
-    // 1. Configuramos tu cuenta de Gmail (de donde sale el mail)
+    // 1. Configuramos tu cuenta de Outlook / Microsoft 365 (de donde sale el mail)
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.office365.com',
+        port: 587,
+        secure: false, // El puerto 587 usa STARTTLS, por lo que secure debe ir en false
         auth: {
             user: process.env.EMAIL_USER, // Tu correo: ventas@woodtools.com.ar
-            pass: process.env.EMAIL_PASS  // Contraseña de aplicación de Google
+            pass: process.env.EMAIL_PASS  // Contraseña de aplicación de Microsoft
+        },
+        tls: {
+            ciphers: 'SSLv3'
         }
     });
 
@@ -26,7 +31,7 @@ app.post('/enviar-correo', async (req, res) => {
     const mailOptions = {
         from: `"${nombre} (Web WoodTools)" <${process.env.EMAIL_USER}>`,
         to: process.env.EMAIL_USER, // El mail llega a tu misma casilla
-        replyTo: email, // Si le das "Responder" en Gmail, le responde al cliente
+        replyTo: email, // Si le das "Responder" en Outlook, le responde al cliente
         subject: `Nueva consulta Web: ${empresa || nombre}`,
         html: `
             <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #ddd; border-top: 4px solid #a41e22; border-radius: 5px;">
@@ -52,7 +57,7 @@ app.post('/enviar-correo', async (req, res) => {
     }
 });
 
-// Iniciamos el servidor en el puerto que nos asigne Render
+// Iniciamos el servidor en el puerto que nos asigne Render (o el 3000 si es local)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor de WoodTools activo en el puerto ${PORT}`);
