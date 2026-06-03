@@ -84,7 +84,7 @@ app.post('/enviar-cotizacion', async (req, res) => {
             <p style="margin: 4px 0;"><strong>Estado:</strong>
                 <span style="background:#e8f5e9; color:#1b5e20; padding:3px 8px; border-radius:4px; font-weight:bold;">CLIENTE EXISTENTE</span>
             </p>
-            <p style="margin: 4px 0;"><strong>CUIT / CUIL:</strong> ${cuit || 'No ingresado'}</p>
+            <p style="margin: 4px 0;"><strong>DNI:</strong> ${cuit || 'No ingresado'}</p>
           `
         : `
             <p style="margin: 4px 0;"><strong>Estado:</strong>
