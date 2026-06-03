@@ -69,14 +69,30 @@ app.post('/enviar-cotizacion', async (req, res) => {
         esCliente,   // true | false
         cuit,        // string (solo si es cliente)
         producto,    // nombre del producto
-        variante     // medida / variante elegida
+        variante,    // medida / variante elegida
+        modelo       // código/modelo del producto (ej: SC2504144F)
     } = req.body;
+
+    // Validación de email del lado del servidor (no se puede saltear desde el navegador).
+    // Debe tener formato usuario@dominio.tld. Se permite vacío sólo si hay teléfono.
+    const emailRegex = /^[^\s@]+@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+    const emailLimpio = (email || '').trim();
+    const telefonoLimpio = (telefono || '').trim();
+
+    if (emailLimpio === '' && telefonoLimpio === '') {
+        return res.status(400).json({ success: false, message: 'Falta un medio de contacto (email o teléfono).' });
+    }
+    if (emailLimpio !== '' && !emailRegex.test(emailLimpio)) {
+        return res.status(400).json({ success: false, message: 'El email no tiene un formato válido.' });
+    }
 
     const transporter = crearTransporter();
 
-    // Asunto diferenciado según sea cliente o primera consulta
+    // Asunto diferenciado según sea cliente o primera consulta.
+    // Incluye el modelo, que es lo que más le sirve al vendedor.
     const tipo = esCliente ? 'Cliente' : 'Nuevo';
-    const asunto = `COTIZACIÓN (${tipo}) - ${producto || 'Producto sin especificar'}`;
+    const refModelo = modelo || producto || 'Producto sin especificar';
+    const asunto = `COTIZACIÓN (${tipo}) - ${refModelo}`;
 
     // Bloque de estado del cliente (varía según corresponda)
     const bloqueCliente = esCliente
@@ -104,7 +120,8 @@ app.post('/enviar-cotizacion', async (req, res) => {
                 <div style="background:#a41e22; color:#fff; padding:14px 16px; border-radius:6px; margin-bottom:18px;">
                     <p style="margin:0; font-size:13px; opacity:0.85;">PRODUCTO SOLICITADO</p>
                     <p style="margin:4px 0 0; font-size:18px; font-weight:bold;">${producto || 'No especificado'}</p>
-                    ${variante ? `<p style="margin:6px 0 0; font-size:14px;">Variante / medida: ${variante}</p>` : ''}
+                    ${modelo ? `<p style="margin:8px 0 0; font-size:20px; font-weight:bold; letter-spacing:0.5px; background:rgba(255,255,255,0.15); display:inline-block; padding:4px 10px; border-radius:4px;">MODELO: ${modelo}</p>` : ''}
+                    ${variante ? `<p style="margin:8px 0 0; font-size:14px;">Variante / medida: ${variante}</p>` : ''}
                 </div>
 
                 <h3 style="color:#a41e22; font-size:15px; margin-bottom:6px;">Datos del solicitante</h3>
